@@ -1,0 +1,161 @@
+{
+    "info": {
+        "name": "Students API",
+        "description": "CRUD en memoria para la entidad Student (NestJS). Reemplaza {{studentId}} manualmente o ejecuta 'Create Student' y copia el id de la respuesta.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:3000"
+        },
+        {
+            "key": "studentId",
+            "value": ""
+        }
+    ],
+    "item": [
+        {
+            "name": "Students CRUD",
+            "item": [
+                {
+                    "name": "Create Student",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Ana García\",\n    \"email\": \"ana@test.cl\",\n    \"age\": 22\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/students",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "students"]
+                        }
+                    }
+                },
+                {
+                    "name": "List Students",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/api/students",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "students"]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Student by ID",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/api/students/{{studentId}}",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "students", "{{studentId}}"]
+                        }
+                    }
+                },
+                {
+                    "name": "Update Student",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"age\": 23\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/students/{{studentId}}",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "students", "{{studentId}}"]
+                        }
+                    }
+                },
+                {
+                    "name": "Delete Student",
+                    "request": {
+                        "method": "DELETE",
+                        "url": {
+                            "raw": "{{baseUrl}}/api/students/{{studentId}}",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "students", "{{studentId}}"]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Error Cases",
+            "item": [
+                {
+                    "name": "Create invalid age (400)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Edad Invalida\",\n    \"email\": \"invalid-age@test.cl\",\n    \"age\": 10\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/students",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "students"]
+                        }
+                    }
+                },
+                {
+                    "name": "Create duplicate email (409)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Otro Estudiante\",\n    \"email\": \"ana@test.cl\",\n    \"age\": 20\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/students",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "students"]
+                        }
+                    }
+                },
+                {
+                    "name": "Get non-existent (404)",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/api/students/00000000-0000-0000-0000-000000000000",
+                            "host": ["{{baseUrl}}"],
+                            "path": [
+                                "api",
+                                "students",
+                                "00000000-0000-0000-0000-000000000000"
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}

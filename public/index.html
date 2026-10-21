@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="es" class="h-full">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Estudiantes — API Demo</title>
+		<link
+			rel="stylesheet"
+			href="https://cdn.jsdelivr.net/npm/vanilla-sonner@0.5.2/dist/vanilla-sonner.min.css"
+		/>
+		<script src="https://cdn.tailwindcss.com"></script>
+		<style>
+			[x-cloak] {
+				display: none !important;
+			}
+		</style>
+	</head>
+	<body class="h-full bg-zinc-50 font-sans antialiased text-zinc-900">
+		<ol
+			id="sonner-toast-container"
+			position="top-right"
+			duration="5000"
+			max-toasts="3"
+			theme="light"
+		></ol>
+		<main x-data="app" x-cloak class="mx-auto max-w-3xl px-4 py-12">
+			<header class="flex items-end justify-between border-b border-zinc-200 pb-8 mb-10">
+				<div>
+					<h1 class="text-3xl font-semibold tracking-tight">Estudiantes</h1>
+					<p class="mt-2 text-sm text-zinc-500">
+						Todos los errores de la API se muestran junto al campo que falla.
+					</p>
+				</div>
+				<button
+					type="button"
+					@click="openCreate()"
+					class="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-700"
+				>
+					Nuevo estudiante
+				</button>
+			</header>
+
+			<p x-show="loading" class="text-sm text-zinc-500">Cargando…</p>
+			<p x-show="!loading && students.length === 0" class="text-sm text-zinc-500">
+				No hay estudiantes registrados.
+			</p>
+
+			<ul>
+				<template x-for="student in students" :key="student.id">
+					<li
+						class="flex items-center justify-between gap-4 py-4 border-b border-zinc-200 last:border-b-0"
+					>
+						<div class="min-w-0">
+							<p class="font-medium text-zinc-900" x-text="student.name"></p>
+							<p
+								class="text-xs text-zinc-500"
+								x-text="`@${student.username} · ${student.email} · ${student.age} años`"
+							></p>
+						</div>
+						<div class="flex shrink-0 gap-2">
+							<a
+								:href="`pets.html?studentId=${student.id}`"
+								class="rounded-md border border-zinc-300 px-3 py-1 text-xs font-medium text-zinc-700 transition hover:bg-zinc-100"
+							>
+								Ver mascotas
+							</a>
+							<button
+								type="button"
+								@click="openEdit(student)"
+								class="rounded-md border border-zinc-300 px-3 py-1 text-xs font-medium text-zinc-700 transition hover:bg-zinc-100"
+							>
+								Editar
+							</button>
+							<button
+								type="button"
+								@click="openDelete(student)"
+								class="rounded-md border border-zinc-300 px-3 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50"
+							>
+								Eliminar
+							</button>
+						</div>
+					</li>
+				</template>
+			</ul>
+
+			<div
+				x-show="modal.open"
+				@click.self="closeModal()"
+				@keydown.escape.window="closeModal()"
+				x-transition.opacity.duration.200ms
+				class="fixed inset-0 z-40 flex items-center justify-center bg-black/30 p-4"
+			>
+				<div class="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
+					<h2
+						class="text-lg font-medium"
+						x-text="modal.mode === 'edit' ? 'Editar estudiante' : 'Nuevo estudiante'"
+					></h2>
+
+					<form class="mt-4 space-y-4" novalidate @submit.prevent="submit()">
+						<div>
+							<label for="name" class="mb-1 block text-sm font-medium text-zinc-700"
+								>Nombre</label
+							>
+							<input
+								id="name"
+								type="text"
+								x-model="form.name"
+								autocomplete="off"
+								placeholder="Juan Pérez"
+								:class="errors.name
+									? 'border-red-400 focus:border-red-500 focus:ring-red-500'
+									: 'border-zinc-300 focus:border-zinc-900 focus:ring-zinc-900'"
+								class="w-full rounded-lg border bg-white px-3 py-2 text-sm outline-none transition focus:ring-1"
+							/>
+							<p
+								x-show="errors.name"
+								x-text="errors.name"
+								class="mt-1 text-xs text-red-600"
+							></p>
+						</div>
+
+						<div>
+							<label
+								for="username"
+								class="mb-1 block text-sm font-medium text-zinc-700"
+							>
+								Nombre de usuario
+							</label>
+							<input
+								id="username"
+								type="text"
+								x-model="form.username"
+								autocomplete="off"
+								placeholder="juanperez"
+								:class="errors.username
+									? 'border-red-400 focus:border-red-500 focus:ring-red-500'
+									: 'border-zinc-300 focus:border-zinc-900 focus:ring-zinc-900'"
+								class="w-full rounded-lg border bg-white px-3 py-2 text-sm outline-none transition focus:ring-1"
+							/>
+							<p
+								x-show="errors.username"
+								x-text="errors.username"
+								class="mt-1 text-xs text-red-600"
+							></p>
+						</div>
+
+						<div>
+							<label for="email" class="mb-1 block text-sm font-medium text-zinc-700">
+								Correo electrónico
+							</label>
+							<input
+								id="email"
+								type="email"
+								x-model="form.email"
+								autocomplete="off"
+								placeholder="juan@example.com"
+								:class="errors.email
+									? 'border-red-400 focus:border-red-500 focus:ring-red-500'
+									: 'border-zinc-300 focus:border-zinc-900 focus:ring-zinc-900'"
+								class="w-full rounded-lg border bg-white px-3 py-2 text-sm outline-none transition focus:ring-1"
+							/>
+							<p
+								x-show="errors.email"
+								x-text="errors.email"
+								class="mt-1 text-xs text-red-600"
+							></p>
+						</div>
+
+						<div>
+							<label for="age" class="mb-1 block text-sm font-medium text-zinc-700"
+								>Edad</label
+							>
+							<input
+								id="age"
+								type="number"
+								x-model="form.age"
+								placeholder="20"
+								:class="errors.age
+									? 'border-red-400 focus:border-red-500 focus:ring-red-500'
+									: 'border-zinc-300 focus:border-zinc-900 focus:ring-zinc-900'"
+								class="w-full rounded-lg border bg-white px-3 py-2 text-sm outline-none transition focus:ring-1"
+							/>
+							<p
+								x-show="errors.age"
+								x-text="errors.age"
+								class="mt-1 text-xs text-red-600"
+							></p>
+						</div>
+
+						<div class="flex gap-3 pt-2">
+							<button
+								type="submit"
+								:disabled="modal.busy"
+								class="flex-1 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-700 disabled:opacity-50"
+								x-text="modal.busy ? 'Guardando…' : 'Guardar'"
+							></button>
+							<button
+								type="button"
+								@click="closeModal()"
+								class="rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100"
+							>
+								Cancelar
+							</button>
+						</div>
+					</form>
+				</div>
+			</div>
+
+			<div
+				x-show="deleteModal.open"
+				@click.self="closeDelete()"
+				@keydown.escape.window="closeDelete()"
+				x-transition.opacity.duration.200ms
+				class="fixed inset-0 z-40 flex items-center justify-center bg-black/30 p-4"
+			>
+				<div class="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
+					<h2 class="text-lg font-medium">Eliminar estudiante</h2>
+					<p class="mt-2 text-sm text-zinc-600">
+						¿Seguro que quieres eliminar a
+						<span class="font-medium" x-text="deleteModal.student?.name"></span>? Sus
+						mascotas también se eliminarán.
+					</p>
+					<div class="mt-6 flex gap-3">
+						<button
+							type="button"
+							@click="confirmDelete()"
+							:disabled="deleteModal.busy"
+							class="flex-1 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700 disabled:opacity-50"
+							x-text="deleteModal.busy ? 'Eliminando…' : 'Eliminar'"
+						></button>
+						<button
+							type="button"
+							@click="closeDelete()"
+							class="flex-1 rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100"
+						>
+							Cancelar
+						</button>
+					</div>
+				</div>
+			</div>
+		</main>
+
+		<script type="module" src="/js/students.js"></script>
+	</body>
+</html>

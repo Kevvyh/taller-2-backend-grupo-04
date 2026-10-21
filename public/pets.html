@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="es" class="h-full">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Mascotas — API Demo</title>
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vanilla-sonner@0.5.2/dist/vanilla-sonner.min.css" />
+		<script src="https://cdn.tailwindcss.com"></script>
+		<style>
+			[x-cloak] {
+				display: none !important;
+			}
+		</style>
+	</head>
+	<body class="h-full bg-zinc-50 font-sans antialiased text-zinc-900">
+		<ol id="sonner-toast-container" position="top-right" duration="5000" max-toasts="3" theme="light"></ol>
+		<main x-data="app" x-cloak class="mx-auto max-w-3xl px-4 py-12">
+
+			<header class="flex items-end justify-between border-b border-zinc-200 pb-8 mb-10">
+				<div class="min-w-0">
+					<a href="index.html" class="text-sm font-medium text-zinc-500 hover:text-zinc-900">
+						← Volver a estudiantes
+					</a>
+					<h1 class="mt-2 text-3xl font-semibold tracking-tight">
+						Mascotas
+						<span
+							class="block text-sm font-normal text-zinc-500"
+							x-show="student"
+							x-text="`de ${student?.name} (@${student?.username})`"
+						></span>
+					</h1>
+				</div>
+				<button
+					type="button"
+					@click="openCreate()"
+					x-show="!studentError"
+					class="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-700"
+				>
+					Nueva mascota
+				</button>
+			</header>
+
+			<p
+				x-show="studentError"
+				class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+			>
+				No se encontró el estudiante solicitado.
+			</p>
+
+			<p x-show="!studentError && loading" class="text-sm text-zinc-500">Cargando…</p>
+			<p x-show="!studentError && !loading && pets.length === 0" class="text-sm text-zinc-500">
+				Este estudiante no tiene mascotas.
+			</p>
+
+			<ul>
+				<template x-for="pet in pets" :key="pet.id">
+					<li class="flex items-center justify-between gap-4 py-4 border-b border-zinc-200 last:border-b-0">
+						<div class="min-w-0">
+							<p class="font-medium text-zinc-900" x-text="pet.name"></p>
+							<p
+								class="text-xs text-zinc-500"
+								x-text="pet.age === undefined ? pet.species : `${pet.species} · ${pet.age} años`"
+							></p>
+						</div>
+						<div class="flex shrink-0 gap-2">
+							<button
+								type="button"
+								@click="openEdit(pet)"
+								class="rounded-md border border-zinc-300 px-3 py-1 text-xs font-medium text-zinc-700 transition hover:bg-zinc-100"
+							>
+								Editar
+							</button>
+							<button
+								type="button"
+								@click="openDelete(pet)"
+								class="rounded-md border border-zinc-300 px-3 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50"
+							>
+								Eliminar
+							</button>
+						</div>
+					</li>
+				</template>
+			</ul>
+
+			<!-- Modal crear / editar -->
+			<div
+				x-show="modal.open"
+				@click.self="closeModal()"
+				@keydown.escape.window="closeModal()"
+				x-transition.opacity.duration.200ms
+				class="fixed inset-0 z-40 flex items-center justify-center bg-black/30 p-4"
+			>
+				<div class="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
+					<h2
+						class="text-lg font-medium"
+						x-text="modal.mode === 'edit' ? 'Editar mascota' : 'Nueva mascota'"
+					></h2>
+
+					<form class="mt-4 space-y-4" novalidate @submit.prevent="submit()">
+						<div>
+							<label for="name" class="mb-1 block text-sm font-medium text-zinc-700">Nombre</label>
+							<input
+								id="name"
+								type="text"
+								x-model="form.name"
+								autocomplete="off"
+								placeholder="Rex"
+								:class="errors.name
+									? 'border-red-400 focus:border-red-500 focus:ring-red-500'
+									: 'border-zinc-300 focus:border-zinc-900 focus:ring-zinc-900'"
+								class="w-full rounded-lg border bg-white px-3 py-2 text-sm outline-none transition focus:ring-1"
+							/>
+							<p x-show="errors.name" x-text="errors.name" class="mt-1 text-xs text-red-600"></p>
+						</div>
+
+						<div>
+							<label for="species" class="mb-1 block text-sm font-medium text-zinc-700">Especie</label>
+							<input
+								id="species"
+								type="text"
+								x-model="form.species"
+								autocomplete="off"
+								placeholder="Perro"
+								:class="errors.species
+									? 'border-red-400 focus:border-red-500 focus:ring-red-500'
+									: 'border-zinc-300 focus:border-zinc-900 focus:ring-zinc-900'"
+								class="w-full rounded-lg border bg-white px-3 py-2 text-sm outline-none transition focus:ring-1"
+							/>
+							<p x-show="errors.species" x-text="errors.species" class="mt-1 text-xs text-red-600"></p>
+						</div>
+
+						<div>
+							<label for="age" class="mb-1 block text-sm font-medium text-zinc-700">Edad</label>
+							<input
+								id="age"
+								type="number"
+								x-model="form.age"
+								placeholder="3"
+								:class="errors.age
+									? 'border-red-400 focus:border-red-500 focus:ring-red-500'
+									: 'border-zinc-300 focus:border-zinc-900 focus:ring-zinc-900'"
+								class="w-full rounded-lg border bg-white px-3 py-2 text-sm outline-none transition focus:ring-1"
+							/>
+							<p x-show="errors.age" x-text="errors.age" class="mt-1 text-xs text-red-600"></p>
+						</div>
+
+						<div class="flex gap-3 pt-2">
+							<button
+								type="submit"
+								:disabled="modal.busy"
+								class="flex-1 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-700 disabled:opacity-50"
+								x-text="modal.busy ? 'Guardando…' : 'Guardar'"
+							></button>
+							<button
+								type="button"
+								@click="closeModal()"
+								class="rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100"
+							>
+								Cancelar
+							</button>
+						</div>
+					</form>
+				</div>
+			</div>
+
+			<!-- Modal confirmar eliminación -->
+			<div
+				x-show="deleteModal.open"
+				@click.self="closeDelete()"
+				@keydown.escape.window="closeDelete()"
+				x-transition.opacity.duration.200ms
+				class="fixed inset-0 z-40 flex items-center justify-center bg-black/30 p-4"
+			>
+				<div class="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
+					<h2 class="text-lg font-medium">Eliminar mascota</h2>
+					<p class="mt-2 text-sm text-zinc-600">
+						¿Seguro que quieres eliminar a
+						<span class="font-medium" x-text="deleteModal.pet?.name"></span>?
+					</p>
+					<div class="mt-6 flex gap-3">
+						<button
+							type="button"
+							@click="confirmDelete()"
+							:disabled="deleteModal.busy"
+							class="flex-1 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700 disabled:opacity-50"
+							x-text="deleteModal.busy ? 'Eliminando…' : 'Eliminar'"
+						></button>
+						<button
+							type="button"
+							@click="closeDelete()"
+							class="flex-1 rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100"
+						>
+							Cancelar
+						</button>
+					</div>
+				</div>
+			</div>
+		</main>
+
+		<script type="module" src="/js/pets.js"></script>
+	</body>
+</html>
