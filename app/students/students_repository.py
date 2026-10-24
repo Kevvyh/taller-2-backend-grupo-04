@@ -3,7 +3,7 @@ from datetime import UTC, datetime
 from sqlalchemy import Column, DateTime, Integer, String
 from sqlalchemy.orm import relationship
 
-from app.shared.database import Base
+from app.shared.database import Base, SessionLocal
 from app.shared.in_memory_store import InMemoryStore
 from app.students.students_schemas import Student
 
@@ -42,7 +42,7 @@ def _to_schema(model: StudentModel) -> Student:
         createdAt=model.created_at,
         updatedAt=model.updated_at,
     )
-
+class StudentsRepository:
     def find_all(self) -> list[Student]:
         with SessionLocal() as session:
             models = session.query(StudentModel).all()
