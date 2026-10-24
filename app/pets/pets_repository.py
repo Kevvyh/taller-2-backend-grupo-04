@@ -3,6 +3,7 @@ from sqlalchemy.orm import relationship
 
 from app.pets.pets_schemas import Pet
 from app.shared.database import Base, SessionLocal
+from app.students.students_repository import StudentModel
 
 
 class PetModel(Base):
