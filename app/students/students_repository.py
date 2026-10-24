@@ -44,19 +44,31 @@ def _to_schema(model: StudentModel) -> Student:
     )
 
     def find_all(self) -> list[Student]:
-        return self._store.find_all()
+        with SessionLocal() as session:
+            models = session.query(StudentModel).all()
+            return [_to_schema(m) for m in models]
 
     def find_by_id(self, student_id: str) -> Student | None:
-        return self._store.get(student_id)
+        with SessionLocal() as session:
+            model = session.get(StudentModel, student_id)
+            return _to_schema(model) if model else None
 
     def find_by_email(self, email: str) -> Student | None:
-        matches = self._store.find_by(lambda student: student.email == email)
-        return matches[0] if matches else None
+        with SessionLocal() as session:
+            model = (
+                session.query(StudentModel).filter(StudentModel.email == email).first()
+            )
+            return _to_schema(model) if model else None
 
     def find_by_username(self, username: str) -> Student | None:
-        matches = self._store.find_by(lambda student: student.username == username)
-        return matches[0] if matches else None
-
+        with SessionLocal() as session:
+            model = (
+                session.query(StudentModel)
+                .filter(StudentModel.username == username)
+                .first()
+            )
+            return _to_schema(model) if model else None
+        
     def save(self, student: Student) -> Student:
         self._store.set(student)
         return student
