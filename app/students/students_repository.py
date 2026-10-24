@@ -4,7 +4,6 @@ from sqlalchemy import Column, DateTime, Integer, String
 from sqlalchemy.orm import relationship
 
 from app.shared.database import Base, SessionLocal
-from app.shared.in_memory_store import InMemoryStore
 from app.students.students_schemas import Student
 
 
@@ -42,6 +41,8 @@ def _to_schema(model: StudentModel) -> Student:
         createdAt=model.created_at,
         updatedAt=model.updated_at,
     )
+
+
 class StudentsRepository:
     def find_all(self) -> list[Student]:
         with SessionLocal() as session:
@@ -70,8 +71,32 @@ class StudentsRepository:
             return _to_schema(model) if model else None
         
     def save(self, student: Student) -> Student:
-        self._store.set(student)
-        return student
+        with SessionLocal() as session:
+            db_student = session.get(StudentModel, student.id)
+            if db_student is None:
+                db_student = StudentModel(
+                    id=student.id,
+                    name=student.name,
+                    username=student.username,
+                    email=student.email,
+                    age=student.age,
+                    created_at=student.createdAt,
+                    updated_at=student.updatedAt,
+                )
+                session.add(db_student)
+            else:
+                db_student.name = student.name
+                db_student.username = student.username
+                db_student.email = student.email
+                db_student.age = student.age
+                db_student.updated_at = student.updatedAt
+            session.commit()
+            session.refresh(db_student)
+            return _to_schema(db_student)
 
     def delete(self, student_id: str) -> None:
-        self._store.delete(student_id)
+        with SessionLocal() as session:
+            db_student = session.get(StudentModel, student_id)
+            if db_student:
+                session.delete(db_student)
+                session.commit()
