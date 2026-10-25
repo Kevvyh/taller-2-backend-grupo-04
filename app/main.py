@@ -14,14 +14,14 @@ from app.shared.exceptions import (
 from app.students.students_controller import router as students_router
 
 # Importaciones para inicializar la BD
-from app.shared.database import Base, engine
+#from app.shared.database import Base, engine
 import app.students.students_repository  # Carga la tabla 'students'
 import app.pets.pets_repository          # Carga la tabla 'pets'
 
 
 def create_app() -> FastAPI:
     # Crea las tablas en PostgreSQL si aún no existen
-    Base.metadata.create_all(bind=engine)
+    #Base.metadata.create_all(bind=engine)
 
     app = FastAPI(
         title="FastAPI CRUD Students & Pets",
