@@ -1,5 +1,4 @@
 services:
-  # Servicio 1: Base de datos PostgreSQL
   postgres_db:
     image: postgres:15-alpine
     container_name: postgres_db
@@ -15,7 +14,6 @@ services:
     networks:
       - backend-network
 
-  # Servicio 2: Administrador Visual (pgAdmin)
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: pgadmin_container
@@ -30,11 +28,10 @@ services:
     networks:
       - backend-network
 
-# Volumen para la persistencia de datos (exigido por rúbrica)
+
 volumes:
   postgres_data:
 
-# Red compartida entre contenedores (exigido por rúbrica)
 networks:
   backend-network:
     driver: bridge
