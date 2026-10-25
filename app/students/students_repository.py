@@ -72,31 +72,40 @@ class StudentsRepository:
         
     def save(self, student: Student) -> Student:
         with SessionLocal() as session:
-            db_student = session.get(StudentModel, student.id)
-            if db_student is None:
-                db_student = StudentModel(
-                    id=student.id,
-                    name=student.name,
-                    username=student.username,
-                    email=student.email,
-                    age=student.age,
-                    created_at=student.createdAt,
-                    updated_at=student.updatedAt,
-                )
-                session.add(db_student)
-            else:
-                db_student.name = student.name
-                db_student.username = student.username
-                db_student.email = student.email
-                db_student.age = student.age
-                db_student.updated_at = student.updatedAt
-            session.commit()
-            session.refresh(db_student)
-            return _to_schema(db_student)
-
+            try:
+            
+                db_student = session.get(StudentModel, student.id)
+                if db_student is None:
+                    db_student = StudentModel(
+                        id=student.id,
+                        name=student.name,
+                        username=student.username,
+                        email=student.email,
+                        age=student.age,
+                        created_at=student.createdAt,
+                        updated_at=student.updatedAt,
+                    )
+                    session.add(db_student)
+                else:
+                    db_student.name = student.name
+                    db_student.username = student.username
+                    db_student.email = student.email
+                    db_student.age = student.age
+                    db_student.updated_at = student.updatedAt
+                session.commit()
+                session.refresh(db_student)
+                return _to_schema(db_student)
+            except Exception as e:
+                session.rollback()
+                raise e
+            
     def delete(self, student_id: str) -> None:
         with SessionLocal() as session:
-            db_student = session.get(StudentModel, student_id)
-            if db_student:
-                session.delete(db_student)
-                session.commit()
+            try:
+                db_student = session.get(StudentModel, student_id)
+                if db_student:
+                    session.delete(db_student)
+                    session.commit()
+            except Exception as e:
+                session.rollback()
+                raise e

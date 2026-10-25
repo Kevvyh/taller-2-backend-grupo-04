@@ -63,38 +63,50 @@ class PetsRepository:
 
     def save(self, pet: Pet) -> Pet:
         with SessionLocal() as session:
-            db_pet = session.get(PetModel, pet.id)
-            if db_pet is None:
-                db_pet = PetModel(
-                    id=pet.id,
-                    student_id=pet.studentId,
-                    name=pet.name,
-                    specie=pet.species,
-                    age=pet.age,
-                    created_at=pet.createdAt,
-                    updated_at=pet.updatedAt,
-                )
-                session.add(db_pet)
-            else:
-                db_pet.name = pet.name
-                db_pet.specie = pet.species
-                db_pet.age = pet.age
-                db_pet.updated_at = pet.updatedAt
-            session.commit()
-            session.refresh(db_pet)
-            return _to_schema(db_pet)
-
+            try:
+                db_pet = session.get(PetModel, pet.id)
+                if db_pet is None:
+                    db_pet = PetModel(
+                        id=pet.id,
+                        student_id=pet.studentId,
+                        name=pet.name,
+                        specie=pet.species,
+                        age=pet.age,
+                        created_at=pet.createdAt,
+                        updated_at=pet.updatedAt,
+                    )
+                    session.add(db_pet)
+                else:
+                    db_pet.name = pet.name
+                    db_pet.specie = pet.species
+                    db_pet.age = pet.age
+                    db_pet.updated_at = pet.updatedAt
+                session.commit()
+                session.refresh(db_pet)
+                return _to_schema(db_pet)
+            except Exception as e:
+                session.rollback()
+                raise e
+            
     def delete(self, pet_id: str) -> None:
         with SessionLocal() as session:
-            db_pet = session.get(PetModel, pet_id)
-            if db_pet:
-                session.delete(db_pet)
-                session.commit()
-
+            try:
+                db_pet = session.get(PetModel, pet_id)
+                if db_pet:
+                    session.delete(db_pet)
+                    session.commit()
+            except Exception as e:
+                session.rollback()
+                raise e
+            
     def delete_by_student(self, student_id: str) -> None:
         with SessionLocal() as session:
-            session.query(PetModel).filter(PetModel.student_id == student_id).delete()
-            session.commit()
+            try:
+                session.query(PetModel).filter(PetModel.student_id == student_id).delete()
+                session.commit()
+            except Exception as e:
+                session.rollback()
+                raise e
 
 
 pets_repository = PetsRepository()

@@ -205,7 +205,13 @@ El cliente estático (`public/`) consume este estándar de forma uniforme:
     uv sync
     ```
 
-2. Levantar el servidor en modo desarrollo:
+2. Levantar la base de datos:
+
+    ```bash
+    docker compose up -d
+    ```
+
+3. Levantar el servidor en modo desarrollo:
 
     ```bash
     make dev
