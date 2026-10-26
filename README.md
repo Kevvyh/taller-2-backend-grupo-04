@@ -1,11 +1,12 @@
 # CRUD Students & Pets (FastAPI)
 
-Proyecto FastAPI que implementa un **CRUD** para la entidad `Student` y sus `Pet`, con **almacenamiento en memoria** a través de repositorios respaldados por diccionarios. Los datos viven mientras el proceso esté corriendo.
+Proyecto FastAPI que implementa un **CRUD** para la entidad `Student` y sus `Pet`, con **almacenamiento persistente en PostgreSQL** administrado mediante **SQLAlchemy** como ORM y **Alembic** para la gestión de migraciones versionadas.
 
 ## Tecnologías
 
 - Python 3.13
-- FastAPI + repositorios en memoria
+- FastAPI + SQLAlchemy + Alembic
+- PostgreSQL + pgAdmin 4 (Dockerized)
 - HTML + JS + Tailwind CSS (frontend estático)
 
 ## Resumen funcional
@@ -46,7 +47,7 @@ La API expone operaciones CRUD completas sobre estudiantes y mascotas:
 
 Si no se envía `pets` (o se envía vacío), el comportamiento es exactamente el mismo de antes.
 
-> **Punto de transacción:** este endpoint realiza varias escrituras (el estudiante y cada mascota). Con un ORM/SQL, todas deben ejecutarse dentro de una transacción: si una mascota falla (por ejemplo, por nombre duplicado), el estudiante y las mascotas anteriores no deben quedar guardados. En esta versión en memoria la implementación es secuencial y **no** hace rollback, a propósito, para que la actividad de ORM/transacciones parta de ese problema.
+> **Punto de transacción:** este endpoint realiza varias escrituras (el estudiante y cada mascota). Todas las operaciones se ejecutan dentro de una transacción SQL: si una mascota falla (por ejemplo, por nombre duplicado), se realiza un rollback automático y ni el estudiante ni las mascotas anteriores quedan guardados.
 
 ### Modelo de datos
 
@@ -85,10 +86,10 @@ Toda respuesta de la API — exitosa o de error — usa el mismo **envelope** `A
 | Campo       | Tipo                | Descripción                                                               |
 | ----------- | ------------------- | ------------------------------------------------------------------------- |
 | `code`      | `number`            | Código de estado HTTP (coincide con el status de la respuesta).           |
-| `success`   | `boolean`           | `true` si la operación se completó, `false` si hubo error.                |
+| `success`   | `boolean`           | `true` si la operación se completó, `false` si hubo error.                 |
 | `message`   | `string`            | Resumen legible del resultado (varía según el método HTTP).               |
 | `timestamp` | `string`            | Fecha/hora en ISO 8601 de la respuesta.                                   |
-| `data`      | `object \| null`    | Datos de la operación. Presente en éxito; `null` en errores.              |
+| `data`      | `object \| null`    | Datos de la operación. Presente en éxito; `null` en errores.               |
 | `error`     | `string` (opcional) | Mensaje de error para errores simples (404, 500).                         |
 | `errors`    | `object` (opcional) | Errores por campo para validación (400) y conflicto (409). Ver más abajo. |
 
@@ -185,7 +186,7 @@ El cliente estático (`public/`) consume este estándar de forma uniforme:
 ## Contexto técnico
 
 - **Backend**: FastAPI
-- **Persistencia**: en memoria (repositorios respaldados por diccionarios); los datos se pierden al reiniciar
+- **Persistencia**: PostgreSQL respaldado por SQLAlchemy + Alembic (Dockerizado)
 - **Validación**: Pydantic v2
 - **Frontend**: archivos estáticos en `public/` (Alpine.js + Tailwind CSS + vanilla-sonner, vía CDN)
 - **Gestor de dependencias**: uv
@@ -211,7 +212,13 @@ El cliente estático (`public/`) consume este estándar de forma uniforme:
     docker compose up -d
     ```
 
-3. Levantar el servidor en modo desarrollo:
+3. Aplicar las migraciones:
+
+    ```bash
+    uv run alembic upgrade head
+    ```
+
+4. Levantar el servidor en modo desarrollo:
 
     ```bash
     make dev
@@ -220,20 +227,20 @@ El cliente estático (`public/`) consume este estándar de forma uniforme:
     O usando uv:
 
     ```bash
-    uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 3000
+    uv run uvicorn app.main:app --reload
     ```
 
 La aplicación queda disponible en:
 
-- `http://localhost:3000`
-- `http://localhost:3000/docs`
-
-> Al ser un almacenamiento en memoria, los datos se pierden cada vez que se reinicia el servidor (incluido el reload de desarrollo).
+- `http://localhost:8000`
+- `http://localhost:8000/docs`
+- `http://localhost:5050` (pgAdmin)
 
 ## Comandos útiles
 
 - `make install` — sincroniza dependencias con uv
 - `make dev` — arranca uvicorn en modo reload
+- `uv run alembic upgrade head` — ejecuta las migraciones de base de datos
 - `make lint` — ejecuta Ruff (con autocorrección)
 - `make format` — formatea el código con Ruff
 - `make format-check` — verifica el formato
